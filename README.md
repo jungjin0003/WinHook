@@ -13,3 +13,48 @@ Korean
 
 # How to used
 <img src="https://github.com/jungjin0003/WinHook/blob/master/Example%20Code.png"></img>
+## Struct Explanation
+ASCII Struct
+```
+typedef struct _WINAPI_HOOK_DATAA {
+    HANDLE hProcess;
+    HMODULE hModule;
+    _require_ PVOID lpOrigin; // Address of function to hook
+    _caller_ PVOID *lpCopyOrigin; // Return replicated function address values (Option)
+    PVOID lpCopyBaseOfCode;
+    _require_ PVOID lpNewFunction; // (new) function address to be jumped
+    PVOID lpNewFunctionEx;
+    PVOID lpParameter; // Parameter address of (new) function (Option)
+    PVOID lpParameterEx;
+    BOOL Parameter; // True is Parameter enabled and False is disable
+    DWORD dwParameterSize;
+    _require_ DWORD dwNewFuncSize; Size of (new) function address to be jumped
+    _one_is_require_ DWORD dwPID; // Target process PID (Set PID or Process Name)
+    BYTE jmpCode[sizeof(Instruction)];
+    _require_ char DLLName[MAX_PATH]; // DLL name of function to be hook
+    _one_is_require_ char ProcessName[MAX_PATH]; // Target process name (Set PID or Process Name)
+} WINAPI_HOOK_DATAA, *PWINAPI_HOOK_DATAA;
+```
+Set to NULL if PID is not used. 
+
+Wide Char Struct
+```
+typedef struct _WINAPI_HOOK_DATAW {
+    HANDLE hProcess;
+    HMODULE hModule;
+    _require_ PVOID lpOrigin; // Address of function to hook
+    _caller_ PVOID *lpCopyOrigin; // Return replicated function address values (Option)
+    PVOID lpCopyBaseOfCode;
+    _require_ PVOID lpNewFunction; // (new) function address to be jumped
+    PVOID lpNewFunctionEx;
+    PVOID lpParameter; // Parameter address of (new) function (Option)
+    PVOID lpParameterEx;
+    BOOL Parameter; // True is Parameter enabled and False is disable
+    DWORD dwParameterSize;
+    _require_ DWORD dwNewFuncSize; Size of (new) function address to be jumped
+    _one_is_require_ DWORD dwPID; // Target process PID (Set PID or Process Name)
+    BYTE jmpCode[sizeof(Instruction)];
+    _require_ char DLLName[MAX_PATH]; // DLL name of function to be hook
+    _one_is_require_ WCHAR ProcessName[MAX_PATH]; // Target process name (Set PID or Process Name)
+} WINAPI_HOOK_DATAW, *PWINAPI_HOOK_DATAW;
+```
