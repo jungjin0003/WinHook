@@ -18,18 +18,20 @@ int AtherFunc() {}
 
 int main()
 {
-    WINAPI_HOOK_DATAA WAHD;
     data Data;
-    scanf("%d", &WAHD.dwPID);
-    WAHD.lpNewFunction = NewMessageBox;
-    WAHD.dwNewFuncSize = (ULONG)AtherFunc - (ULONG)NewMessageBox;
-    WAHD.lpOrigin = MessageBoxA;
-    WAHD.lpCopyOrigin = &Data.pFunc;
-    strcpy(WAHD.DLLName, "user32.dll");
     strcpy(Data.Text, "Hooked!");
-    WAHD.Parameter = TRUE;
-    WAHD.lpParameter = &Data;
-    WAHD.dwParameterSize = sizeof(data);
-    
-    HookA(&WAHD);
+    WINAPI_BASIC_HOOK_DATAA WinApi_Basic_Hook_Data;
+    strcpy(WinApi_Basic_Hook_Data.DLLName, "user32.dll");
+    WinApi_Basic_Hook_Data.lpOrigin = MessageBoxA;
+    WinApi_Basic_Hook_Data.lpNewFunction = NewMessageBox;
+    WinApi_Basic_Hook_Data.lpParameter = &Data;
+    WinApi_Basic_Hook_Data.Parameter = TRUE;
+    WinApi_Basic_Hook_Data.dwParameterSize = sizeof(data);
+    WinApi_Basic_Hook_Data.dwNewFuncSize = (Address)AtherFunc - (Address)NewMessageBox;
+    WinApi_Basic_Hook_Data.lpCopyOrigin = &Data.pFunc;
+
+    // DWORD PID;
+    // scanf("%d", &PID);
+    // HookA(&WinApi_Basic_Hook_Data, NULL, "TEST.exe");
+    // HookA(&WinApi_Basic_Hook_Data, PID, NULL);
 }
