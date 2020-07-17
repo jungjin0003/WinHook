@@ -25,10 +25,10 @@ HANDLE GetProcessHandleByFileNameA(char* name)
     num_processes = (bytes_returned/sizeof(DWORD));
     for (int i = 0; i < num_processes; i++) 
     {
-        hProcess = OpenProcess(PROCESS_ALL_ACCESS,TRUE,process_id_array[i]);
+        hProcess = OpenProcess(PROCESS_ALL_ACCESS, TRUE, process_id_array[i]);
         if(GetModuleBaseNameA(hProcess, 0, image_name, MAX_PATH))
         {
-            if(!stricmp(image_name,name))
+            if(!stricmp(image_name, name))
             {
                 return hProcess;
             }
@@ -62,104 +62,120 @@ HANDLE GetProcessHandleByFileNameW(WCHAR* name)
     return NULL;
 }
 
-BOOL HookA(PWINAPI_HOOK_DATAA lpWinApi_Hook_Data)
+BOOL HookA(PWINAPI_BASIC_HOOK_DATAA lpWinApi_Basic_Hook_Data, DWORD PID, char *ProcessName)
 {
-    if (lpWinApi_Hook_Data->dwPID == NULL)
+    WINAPI_HOOK_DATAA WinApi_Hook_Data;
+
+    if (Set_WINAPI_StructA(&WinApi_Hook_Data, lpWinApi_Basic_Hook_Data) == FALSE)
     {
-        lpWinApi_Hook_Data->hProcess = GetProcessHandleByFileNameA(lpWinApi_Hook_Data->ProcessName);
+        Error("Set_WINAPI_StructA");
+        return FALSE;
+    }
+
+    if (PID == NULL)
+    {
+        WinApi_Hook_Data.hProcess = GetProcessHandleByFileNameA(ProcessName);
     }
     else
     {
-        lpWinApi_Hook_Data->hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, lpWinApi_Hook_Data->dwPID);
+        WinApi_Hook_Data.hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, PID);
     }
 
-    if (lpWinApi_Hook_Data->hProcess == NULL)
+    if (WinApi_Hook_Data.hProcess == NULL)
     {
         Error("OpenProcess");
         return FALSE;
     }
 
-    if (!WriteNewFunctionA(lpWinApi_Hook_Data))
+    if (!WriteNewFunctionA(&WinApi_Hook_Data))
     {
         printf("WriteNewFunction\n");
         return FALSE;
     }
-    if (!CopyDLLCodeA(lpWinApi_Hook_Data))
+    if (!CopyDLLCodeA(&WinApi_Hook_Data))
     {
         printf("CopyDLLCode\n");
         return FALSE;
     }
-    if (!SetAssemblyInstructionA(lpWinApi_Hook_Data))
+    if (!SetAssemblyInstructionA(&WinApi_Hook_Data))
     {
         printf("SetAssemblyInstruction\n");
         return FALSE;
     }
-    if (!SetCopyFunctionA(lpWinApi_Hook_Data))
+    if (!SetCopyFunctionA(&WinApi_Hook_Data))
     {
         printf("SetCopyFunction\n");
         return FALSE;
     }
-    if (lpWinApi_Hook_Data->Parameter)
+    if (WinApi_Hook_Data.Parameter)
     {
-        if (!WriteParameterA(lpWinApi_Hook_Data))
+        if (!WriteParameterA(&WinApi_Hook_Data))
         {
             printf("WriteParameter\n");
             return FALSE;
         }
     }
-    if (!CodePatchA(lpWinApi_Hook_Data))
+    if (!CodePatchA(&WinApi_Hook_Data))
     {
         printf("CodePatch\n");
         return FALSE;
     }
 }
 
-BOOL HookW(PWINAPI_HOOK_DATAW lpWinApi_Hook_Data)
+BOOL HookW(PWINAPI_BASIC_HOOK_DATAW lpWinApi_Basic_Hook_Data, DWORD PID, wchar_t *ProcessName)
 {
-    if (lpWinApi_Hook_Data->dwPID == NULL)
+    WINAPI_HOOK_DATAW WinApi_Hook_Data;
+
+    if (Set_WINAPI_StructW(&WinApi_Hook_Data, lpWinApi_Basic_Hook_Data) == FALSE)
     {
-        lpWinApi_Hook_Data->hProcess = GetProcessHandleByFileNameW(lpWinApi_Hook_Data->ProcessName);
+        Error("Set_WINAPI_StructW");
+        return FALSE;
+    }
+
+    if (PID == NULL)
+    {
+        WinApi_Hook_Data.hProcess = GetProcessHandleByFileNameW(ProcessName);
     }
     else
     {
-        lpWinApi_Hook_Data->hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, lpWinApi_Hook_Data->dwPID);
+        WinApi_Hook_Data.hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, PID);
     }
 
-    if (lpWinApi_Hook_Data->hProcess == NULL)
+    if (WinApi_Hook_Data.hProcess == NULL)
     {
         Error("OpenProcess");
         return FALSE;
     }
 
-    if (!WriteNewFunctionW(lpWinApi_Hook_Data))
+    if (!WriteNewFunctionW(&WinApi_Hook_Data))
     {
         printf("WriteNewFunction\n");
         return FALSE;
     }
-    if (!CopyDLLCodeW(lpWinApi_Hook_Data))
+    if (!CopyDLLCodeW(&WinApi_Hook_Data))
     {
         printf("CopyDLLCode\n");
         return FALSE;
     }
-    if (!SetAssemblyInstructionW(lpWinApi_Hook_Data))
+    if (!SetAssemblyInstructionW(&WinApi_Hook_Data))
     {
         printf("SetAssemblyInstruction\n");
         return FALSE;
     }
-    if (!SetCopyFunctionW(lpWinApi_Hook_Data))
+    if (!SetCopyFunctionW(&WinApi_Hook_Data))
     {
         printf("SetCopyFunction\n");
         return FALSE;
     }
-    if (lpWinApi_Hook_Data->Parameter)
+    if (WinApi_Hook_Data.Parameter)
     {
-        if (!WriteParameterW(lpWinApi_Hook_Data))
+        if (!WriteParameterW(&WinApi_Hook_Data))
         {
             printf("WriteParameter\n");
             return FALSE;
         }
     }
-    if (!CodePatchW(lpWinApi_Hook_Data))
+    if (!CodePatchW(&WinApi_Hook_Data))
     {
         printf("CodePatch\n");
         return FALSE;
@@ -483,6 +499,32 @@ BOOL CodePatchW(PWINAPI_HOOK_DATAW lpWinApi_Hook_Data)
         }
     }
 
+    return TRUE;
+}
+
+BOOL Set_WINAPI_StructA(PWINAPI_HOOK_DATAA lpWinApi_Hook_Data, PWINAPI_BASIC_HOOK_DATAA lpWinApi_Basic_Hook_Data)
+{
+    lpWinApi_Hook_Data->lpOrigin = lpWinApi_Basic_Hook_Data->lpOrigin;
+    lpWinApi_Hook_Data->lpCopyOrigin = lpWinApi_Basic_Hook_Data->lpCopyOrigin;
+    lpWinApi_Hook_Data->lpNewFunction = lpWinApi_Basic_Hook_Data->lpNewFunction;
+    lpWinApi_Hook_Data->lpParameter = lpWinApi_Basic_Hook_Data->lpParameter;
+    lpWinApi_Hook_Data->Parameter = lpWinApi_Basic_Hook_Data->Parameter;
+    lpWinApi_Hook_Data->dwParameterSize = lpWinApi_Basic_Hook_Data->dwParameterSize;
+    lpWinApi_Hook_Data->dwNewFuncSize = lpWinApi_Basic_Hook_Data->dwNewFuncSize;
+    strcpy(lpWinApi_Hook_Data->DLLName, lpWinApi_Basic_Hook_Data->DLLName);
+    return TRUE;
+}
+
+BOOL Set_WINAPI_StructW(PWINAPI_HOOK_DATAW lpWinApi_Hook_Data, PWINAPI_BASIC_HOOK_DATAW lpWinApi_Basic_Hook_Data)
+{
+    lpWinApi_Hook_Data->lpOrigin = lpWinApi_Basic_Hook_Data->lpOrigin;
+    lpWinApi_Hook_Data->lpCopyOrigin = lpWinApi_Basic_Hook_Data->lpCopyOrigin;
+    lpWinApi_Hook_Data->lpNewFunction = lpWinApi_Basic_Hook_Data->lpNewFunction;
+    lpWinApi_Hook_Data->lpParameter = lpWinApi_Basic_Hook_Data->lpParameter;
+    lpWinApi_Hook_Data->Parameter = lpWinApi_Basic_Hook_Data->Parameter;
+    lpWinApi_Hook_Data->dwParameterSize = lpWinApi_Basic_Hook_Data->dwParameterSize;
+    lpWinApi_Hook_Data->dwNewFuncSize = lpWinApi_Basic_Hook_Data->dwNewFuncSize;
+    wcscpy(lpWinApi_Hook_Data->DLLName, lpWinApi_Basic_Hook_Data->DLLName);
     return TRUE;
 }
 
