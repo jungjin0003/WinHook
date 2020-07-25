@@ -11,7 +11,8 @@ typedef struct {
 
 int NewMessageBox(HWND hWnd, LPCSTR lpText, LPCSTR lpCation, UINT uType)
 {
-    volatile data *Data = 0xCCCCCCCC;
+    // volatile data *Data = 0xCCCCCCCC; //32bit
+    // volatile data *Data = 0xCCCCCCCCCCCCCCCC; //64bit
     return ((MESSAGEBOXA)Data->pFunc)(hWnd, Data->Text, Data->Text, uType);
 }
 int AtherFunc() {}
