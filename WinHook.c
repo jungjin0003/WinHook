@@ -241,13 +241,15 @@ BOOL CopyDLLCodeA(PWINAPI_HOOK_DATAA lpWinApi_Hook_Data)
 
     Data = malloc(pinth->OptionalHeader.SizeOfImage);
 
-    if (ReadProcessMemory(lpWinApi_Hook_Data->hProcess, (Address)pinth->OptionalHeader.ImageBase + (Address)pinth->OptionalHeader.BaseOfCode, Data, (Address)pinth->OptionalHeader.SizeOfImage - (Address)pinth->OptionalHeader.SizeOfCode, NULL) == FALSE)
+    memcpy(Data, (Address)lpWinApi_Hook_Data->hModule + (Address)pinth->OptionalHeader.BaseOfCode, (Address)pinth->OptionalHeader.SizeOfImage - (Address)pinth->OptionalHeader.BaseOfCode);
+
+    if(memcmp(Data, (Address)lpWinApi_Hook_Data->hModule + (Address)pinth->OptionalHeader.BaseOfCode, (Address)pinth->OptionalHeader.SizeOfImage - (Address)pinth->OptionalHeader.BaseOfCode) != 0)
     {
-        Error("ReadProcessMemory");
+        Error("memcpy");
         return FALSE;
     }
 
-	lpWinApi_Hook_Data->lpCopyBaseOfCode = VirtualAllocEx(lpWinApi_Hook_Data->hProcess, NULL, pinth->OptionalHeader.SizeOfImage, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+	lpWinApi_Hook_Data->lpCopyBaseOfCode = VirtualAllocEx(lpWinApi_Hook_Data->hProcess, NULL, (Address)pinth->OptionalHeader.SizeOfImage - (Address)pinth->OptionalHeader.BaseOfCode, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 
     if (lpWinApi_Hook_Data->lpCopyBaseOfCode == NULL)
     {
@@ -255,7 +257,7 @@ BOOL CopyDLLCodeA(PWINAPI_HOOK_DATAA lpWinApi_Hook_Data)
         return FALSE;
     }
 
-	if (WriteProcessMemory(lpWinApi_Hook_Data->hProcess, lpWinApi_Hook_Data->lpCopyBaseOfCode, Data, (Address)pinth->OptionalHeader.SizeOfImage - (Address)pinth->OptionalHeader.SizeOfCode, NULL) == NULL)
+	if (WriteProcessMemory(lpWinApi_Hook_Data->hProcess, lpWinApi_Hook_Data->lpCopyBaseOfCode, Data, (Address)pinth->OptionalHeader.SizeOfImage - (Address)pinth->OptionalHeader.BaseOfCode, NULL) == NULL)
     {
         Error("WriteProcessMemory");
         return FALSE;
@@ -287,13 +289,15 @@ BOOL CopyDLLCodeW(PWINAPI_HOOK_DATAW lpWinApi_Hook_Data)
 
     Data = malloc(pinth->OptionalHeader.SizeOfImage);
 
-    if (ReadProcessMemory(lpWinApi_Hook_Data->hProcess, (Address)pinth->OptionalHeader.ImageBase + (Address)pinth->OptionalHeader.BaseOfCode, Data, pinth->OptionalHeader.SizeOfImage, NULL) == FALSE)
+    memcpy(Data, (Address)lpWinApi_Hook_Data->hModule + (Address)pinth->OptionalHeader.BaseOfCode, (Address)pinth->OptionalHeader.SizeOfImage - (Address)pinth->OptionalHeader.BaseOfCode);
+
+    if(memcmp(Data, (Address)lpWinApi_Hook_Data->hModule + (Address)pinth->OptionalHeader.BaseOfCode, (Address)pinth->OptionalHeader.SizeOfImage - (Address)pinth->OptionalHeader.BaseOfCode) != 0)
     {
-        Error("ReadProcessMemory");
+        Error("memcpy");
         return FALSE;
     }
 
-	lpWinApi_Hook_Data->lpCopyBaseOfCode = VirtualAllocEx(lpWinApi_Hook_Data->hProcess, NULL, pinth->OptionalHeader.SizeOfImage, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+	lpWinApi_Hook_Data->lpCopyBaseOfCode = VirtualAllocEx(lpWinApi_Hook_Data->hProcess, NULL, (Address)pinth->OptionalHeader.SizeOfImage - (Address)pinth->OptionalHeader.BaseOfCode, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 
     if (lpWinApi_Hook_Data->lpCopyBaseOfCode == NULL)
     {
@@ -301,7 +305,7 @@ BOOL CopyDLLCodeW(PWINAPI_HOOK_DATAW lpWinApi_Hook_Data)
         return FALSE;
     }
 
-	if (WriteProcessMemory(lpWinApi_Hook_Data->hProcess, lpWinApi_Hook_Data->lpCopyBaseOfCode, Data, pinth->OptionalHeader.SizeOfImage, NULL) == NULL)
+	if (WriteProcessMemory(lpWinApi_Hook_Data->hProcess, lpWinApi_Hook_Data->lpCopyBaseOfCode, Data, (Address)pinth->OptionalHeader.SizeOfImage - (Address)pinth->OptionalHeader.BaseOfCode, NULL) == NULL)
     {
         Error("WriteProcessMemory");
         return FALSE;
